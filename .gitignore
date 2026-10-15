@@ -24,3 +24,11 @@ web_custom_versions/
 filtered-openapi.yaml
 uv.lock
 .comfy_environment
+
+# Local fork: machine-specific backups and archives
+*.before-comfy-port
+*.before-noexpand-*
+*.before-pixal3d-mv-*
+*.orig-machine-refs
+*.zip
+/_backup_custom_nodes/
