@@ -69,13 +69,24 @@ if __name__ == "__main__" and args.debug_hang:
 import comfy_aimdo.control
 
 if enables_dynamic_vram():
+    _aimdo_impl = None
+    _torch_spec = importlib.util.find_spec("torch")
+    if _torch_spec is not None and _torch_spec.origin:
+        _ver_file = os.path.join(os.path.dirname(_torch_spec.origin), "version.py")
+        if os.path.isfile(_ver_file):
+            _ver_spec = importlib.util.spec_from_file_location("_torch_ver_tmp", _ver_file)
+            if _ver_spec is not None and _ver_spec.loader is not None:
+                _ver_mod = importlib.util.module_from_spec(_ver_spec)
+                _ver_spec.loader.exec_module(_ver_mod)
+                if getattr(_ver_mod, "hip", None) is not None:
+                    _aimdo_impl = "rocm"
     simple_vram_headroom = None if args.reserve_vram is None else int(args.reserve_vram * 1024 ** 3)
     try:
-        comfy_aimdo.control.init(simple_vram_headroom=simple_vram_headroom, nvml_pressure=not args.disable_nvml_pressure)
+        comfy_aimdo.control.init(_aimdo_impl, simple_vram_headroom=simple_vram_headroom, nvml_pressure=not args.disable_nvml_pressure)
     except TypeError:
         # comfy-aimdo 0.4.10 protocol.
         try:
-            comfy_aimdo.control.init(simple_vram_headroom=simple_vram_headroom)
+            comfy_aimdo.control.init(_aimdo_impl, simple_vram_headroom=simple_vram_headroom)
         except TypeError:
             # comfy-aimdo 0.4.9 protocol.
             comfy_aimdo.control.init()
